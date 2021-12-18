@@ -1,0 +1,115 @@
+import io.spring.gradle.dependencymanagement.DependencyManagementPlugin
+import org.springframework.boot.gradle.plugin.SpringBootPlugin
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:$rootProject.ext.springBootVersion")
+    }
+}
+
+apply plugin: SpringBootPlugin
+apply plugin: DependencyManagementPlugin
+
+configurations {
+    implementationOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+jar {
+    archiveBaseName = "qeatsbackend"
+    archiveVersion = "v1"
+    enabled = true
+}
+
+dependencies {
+    def jacksonVersion = "2.9.8"
+
+    implementation "org.springframework.boot:spring-boot-starter-data-mongodb:2.2.8.RELEASE"
+    compile("org.springframework.boot:spring-boot-starter-log4j2:$rootProject.ext.springBootVersion") {
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-jul'
+        exclude group: 'org.slf4j', module: 'jul-to-slf4j'
+    }
+
+    // log4j2 dependencies
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.12.1'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.1'
+    //compile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.12.1'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-jul', version: '2.12.1'
+    compile group: 'org.slf4j', name: 'jul-to-slf4j', version: '1.7.28'
+
+    // required for json layout
+    compile group:'com.fasterxml.jackson.core', name:'jackson-databind', version:'2.9.8'
+    compile group:'com.fasterxml.jackson.core', name:'jackson-annotations', version:'2.9.8'
+    compile group:'com.fasterxml.jackson.core', name:'jackson-core', version:'2.9.8'
+
+    implementation "org.modelmapper:modelmapper:$rootProject.ext.modelMapperVersion"
+    implementation "org.springframework.boot:spring-boot-starter-web"
+    implementation group: "javax.inject", name: "javax.inject", version: "1"
+    implementation("org.springframework.boot:spring-boot-starter-actuator:$rootProject.ext.springBootVersion")
+
+    implementation group: "com.google.guava", name: "guava", version: "20.0"
+    implementationOnly "org.projectlombok:lombok"
+    runtimeOnly "org.springframework.boot:spring-boot-devtools"
+    annotationProcessor "org.projectlombok:lombok"
+    implementation "io.springfox:springfox-swagger2:$rootProject.ext.swaggerVersion"
+    implementation "io.springfox:springfox-swagger-ui:$rootProject.ext.swaggerVersion"
+
+    testImplementation("org.mockito:mockito-junit-jupiter:$rootProject.ext.mockitoVersion")
+    testImplementation("org.springframework.boot:spring-boot-starter-test:$rootProject.ext.springBootVersion") {
+        exclude group: "junit", module: "junit"
+        exclude group: "org.junit.vintage", module: "junit-vintage-engine"
+    }
+
+    testImplementation "de.flapdoodle.embed:de.flapdoodle.embed.mongo"
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.6.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.0")
+    testImplementation("org.junit.platform:junit-platform-launcher" +
+            ":1.6.0")
+    testImplementation("org.junit.platform:junit-platform-engine" +
+            ":1.6.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.6.0")
+    testImplementation("org.projectlombok:lombok")
+    testImplementation("org.springframework:spring-webflux:5.2.7.RELEASE")
+}
+
+configurations {
+    all {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+    }
+}
+
+apply plugin: 'application'
+mainClassName = 'com.crio.buildouts.QuizApplication'
+
+tasks.withType(Test) {
+    scanForTestClasses = true // whatever Ant pattern matches your test class files
+}
+
+task loaddata(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    main = 'com.crio.buildouts.integ.IntegrationTest'
+}
+
+// testSets {
+//     integrationTest
+// }
+
+// integrationTest {
+//     useJUnit {
+//         includeCategories 'com.crio.buildouts.integ.test.IntegrationTest'
+//     }
+//     testLogging {
+//         showStandardStreams = true
+//     }
+// }
+
